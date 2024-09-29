@@ -20,23 +20,22 @@ function github_api_get {
     curl -s -u "${USERNAME}:${TOKEN}" "$url"
 }
 
-# Function to list users with read access to the repository
-function list_users_with_read_access {
+# Function to list users with read and write access to the repository
+function list_users_with_access {
     local endpoint="repos/${REPO_OWNER}/${REPO_NAME}/collaborators"
 
     # Fetch the list of collaborators on the repository
-    collaborators="$(github_api_get "$endpoint" | jq -r '.[] | select(.permissions.pull == true) | .login')"
+    collaborators="$(github_api_get "$endpoint")"
 
-    # Display the list of collaborators with read access
-    if [[ -z "$collaborators" ]]; then
-        echo "No users with read access found for ${REPO_OWNER}/${REPO_NAME}."
-    else
-        echo "Users with read access to ${REPO_OWNER}/${REPO_NAME}:"
-        echo "$collaborators"
-    fi
+    # Display the list of collaborators with read (pull) access
+    echo "Users with read (pull) access to ${REPO_OWNER}/${REPO_NAME}:"
+    echo "$(echo "$collaborators" | jq -r '.[] | select(.permissions.pull == true) | .login')"
+
+    # Display the list of collaborators with write (push) access
+    echo "Users with write (push) access to ${REPO_OWNER}/${REPO_NAME}:"
+    echo "$(echo "$collaborators" | jq -r '.[] | select(.permissions.push == true) | .login')"
 }
 
 # Main script
-
-echo "Listing users with read access to ${REPO_OWNER}/${REPO_NAME}..."
-list_users_with_read_access
+echo "Listing users with read and write access to ${REPO_OWNER}/${REPO_NAME}..."
+list_users_with_access
